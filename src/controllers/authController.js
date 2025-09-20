@@ -19,8 +19,11 @@ export const loginHandler = asyncHandler(async (req, res) => {
   const payload = loginSchema.parse(req.body);
 
   const result = await authenticateUser(payload.email, payload.password, payload.deviceId, payload.deviceLabel);
-  res.cookie(sessionCookieName, result.session.token, sessionCookieOptions);
-  res.status(200).json({ ok: true, reused: result.reused });
+  res.status(200).json({ 
+    ok: true, 
+    reused: result.reused,
+    token: result.session.token 
+  });
 });
 
 export const logoutHandler = asyncHandler(async (req, res) => {
@@ -37,16 +40,17 @@ export const logoutHandler = asyncHandler(async (req, res) => {
 });
 
 export const sessionHandler = asyncHandler(async (req, res) => {
-  const token = req.cookies?.[sessionCookieName];
-  if (!token) {
-    res.status(401).json({ error: "Missing session" });
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    res.status(401).json({ error: "Missing authorization header" });
     return;
   }
 
+  const token = authHeader.split(' ')[1];
   try {
     const result = await getSessionFromToken(token);
     if (!result) {
-      res.status(401).json({ error: "Missing session" });
+      res.status(401).json({ error: "Invalid token" });
       return;
     }
     res.status(200).json({ ok: true, email: result.user.email });
