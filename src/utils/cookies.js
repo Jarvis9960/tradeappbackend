@@ -6,7 +6,7 @@ export const sessionCookieName = "session_token";
 
 export const sessionCookieOptions = {
   httpOnly: true,
-  sameSite: config.nodeEnv === "production" ? "none" : "strict",
+  sameSite: config.nodeEnv === "production" ? "none" : "lax",
   secure: config.nodeEnv === "production",
   path: "/",
   domain: config.nodeEnv === "production" ? config.cookieDomain : undefined,
