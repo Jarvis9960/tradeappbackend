@@ -3,7 +3,6 @@ import "dotenv/config";
 const requiredEnv = ["MONGODB_URI", "JWT_SECRET", "PORT"];
 
 if (process.env.NODE_ENV === "production") {
-  requiredEnv.push("COOKIE_DOMAIN");
   requiredEnv.push("CORS_ORIGIN");
 }
 
