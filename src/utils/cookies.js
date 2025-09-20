@@ -6,10 +6,9 @@ export const sessionCookieName = "session_token";
 
 export const sessionCookieOptions = {
   httpOnly: true,
-  sameSite: config.nodeEnv === "production" ? "none" : "lax",
-  secure: config.nodeEnv === "production",
+  sameSite: "none",
+  secure: true,
   path: "/",
-  domain: config.nodeEnv === "production" ? config.cookieDomain : undefined,
   maxAge: maxAgeMs(),
 };
 

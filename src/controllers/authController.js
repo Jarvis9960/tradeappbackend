@@ -46,7 +46,8 @@ export const sessionHandler = asyncHandler(async (req, res) => {
   try {
     const result = await getSessionFromToken(token);
     if (!result) {
-      throw new Error("Invalid session");
+      res.status(401).json({ error: "Missing session" });
+      return;
     }
     res.status(200).json({ ok: true, email: result.user.email });
   } catch (error) {
