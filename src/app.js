@@ -12,13 +12,7 @@ export const createApp = () => {
   app.disable("x-powered-by");
   app.use(morgan(config.nodeEnv === "production" ? "combined" : "dev"));
   app.use(cors({
-    origin: (origin, callback) => {
-      if (config.corsOrigin === "*" || !origin || config.corsOrigin.split(",").indexOf(origin) !== -1) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
+    origin: config.corsOrigin,
     credentials: true,
   }));
   app.use(express.json({ limit: "1mb" }));
@@ -33,4 +27,5 @@ export const createApp = () => {
   app.use(errorHandler);
 
   return app;
+
 };
