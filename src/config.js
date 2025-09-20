@@ -2,6 +2,11 @@ import "dotenv/config";
 
 const requiredEnv = ["MONGODB_URI", "JWT_SECRET", "PORT"];
 
+if (process.env.NODE_ENV === "production") {
+  requiredEnv.push("COOKIE_DOMAIN");
+  requiredEnv.push("CORS_ORIGIN");
+}
+
 requiredEnv.forEach((key) => {
   if (!process.env[key]) {
     throw new Error(`Missing required environment variable: ${key}`);
@@ -15,4 +20,5 @@ export const config = {
   nodeEnv: process.env.NODE_ENV ?? "development",
   corsOrigin: process.env.CORS_ORIGIN?.split(",").map((value) => value.trim()).filter(Boolean) ?? ["http://localhost:3000"],
   sessionTtlMinutes: Number(process.env.SESSION_TTL_MINUTES ?? 480),
+  cookieDomain: process.env.COOKIE_DOMAIN,
 };
