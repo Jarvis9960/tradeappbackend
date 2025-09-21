@@ -33,22 +33,20 @@ export const addAuditEvent = async (user, type, detail) => {
 };
 
 export const markUserBlocked = async (user, reason) => {
-  user.blocked = true;
-  user.blockedReason = reason;
-  user.blockedAt = new Date();
-
+  const blockedAt = new Date();
   await UserModel.updateOne(
     { _id: user._id },
     {
       $set: {
         blocked: true,
         blockedReason: reason,
-        blockedAt: user.blockedAt,
+        blockedAt,
       },
     },
   );
-
-  await pushAudit(user, { type: "ACCOUNT_BLOCKED", detail: reason });
+  const updatedUser = await UserModel.findById(user._id);
+  await pushAudit(updatedUser, { type: "ACCOUNT_BLOCKED", detail: reason });
+  return updatedUser;
 };
 
 export const findUserByEmail = async (email) => UserModel.findOne({ email: email.toLowerCase() });
