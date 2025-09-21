@@ -11,8 +11,11 @@ const securitySchema = z.object({
 });
 
 export const securityEventHandler = asyncHandler(async (req, res) => {
-  const payload = securitySchema.parse(req.body);
-  const token = req.cookies?.[sessionCookieName];
+  const payload = securitySchema.extend({ token: z.string().optional() }).parse(req.body);
+  let token = req.cookies?.[sessionCookieName];
+  if (!token && payload.token) {
+    token = payload.token;
+  }
   const message = payload.message ?? "Developer tools detected on client";
 
   if (!token) {
