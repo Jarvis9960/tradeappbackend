@@ -108,7 +108,9 @@ export const getSessionFromToken = async (token) => {
 };
 
 export const seedDefaultUser = async () => {
-  const email = "trader@example.com";
+  // const email = "trader@example.com";
+  // const password = "Trade!2025";
+    const email = "admin@yopmail.com";
   const password = "Trade!2025";
   await ensureUserExists(email, password);
 };
