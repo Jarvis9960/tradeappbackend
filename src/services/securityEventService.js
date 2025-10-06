@@ -15,7 +15,7 @@ export const recordSecurityEvent = async (params) => {
   // Send email notification for critical security events
   if (params.type === "DEVTOOLS_OPENED" || params.type === "SECOND_DEVICE_ATTEMPT") {
     const subject = `Security Alert: ${params.type}`;
-    const text = `A security event has been detected in the Trade App.\n\nEvent: ${params.type}\nUser: ${params.email || 'Unknown'}\nMessage: ${params.message}`;
+    const text = `A security event has been detected in the Tradingwala platform.\n\nEvent: ${params.type}\nUser: ${params.email || 'Unknown'}\nMessage: ${params.message}`;
     
     try {
       await sendSecurityNotification({ subject, text, eventData: params });

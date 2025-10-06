@@ -1,5 +1,5 @@
 {
-  "name": "trade-app-backend",
+  "name": "tradingwala-backend",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -25,3 +25,4 @@
     "nodemon": "^3.1.4"
   }
 }
+
