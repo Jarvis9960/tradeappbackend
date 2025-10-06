@@ -8,11 +8,17 @@ import {
 } from "./sessionService.js";
 import { recordSecurityEvent } from "./securityEventService.js";
 
-const ensureUserExists = async (email, password) => {
+const ensureUserExists = async (email, password, options = {}) => {
   const existing = await findUserByEmail(email);
-  if (existing) return existing;
+  if (existing) {
+    if (options.isAdmin && !existing.isAdmin) {
+      existing.isAdmin = true;
+      await existing.save();
+    }
+    return existing;
+  }
   const passwordHash = await bcrypt.hash(password, 10);
-  return createUser({ email, passwordHash });
+  return createUser({ email, passwordHash, ...options });
 };
 
 export const authenticateUser = async (
@@ -108,11 +114,9 @@ export const getSessionFromToken = async (token) => {
 };
 
 export const seedDefaultUser = async () => {
-  // const email = "trader@example.com";
-  // const password = "Trade!2025";
-    const email = "admin@yopmail.com";
+  const email = "admin@yopmail.com";
   const password = "Trade!2025";
-  await ensureUserExists(email, password);
+  await ensureUserExists(email, password, { isAdmin: true });
 };
 
 export const blockUserForDevtools = async (user, deviceId, message) => {

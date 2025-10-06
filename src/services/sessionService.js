@@ -17,6 +17,7 @@ export const findActiveSessionForUser = async (user) =>
 export const findSessionByToken = async (token) =>
   SessionModel.findOne({ token, revokedAt: { $exists: false }, expiresAt: { $gt: new Date() } }).populate("user");
 
+export const findSessionById = async (id) => SessionModel.findById(id).populate("user");
 export const revokeSession = async (session, reason) => {
   session.revokedAt = new Date();
   session.revokedReason = reason;

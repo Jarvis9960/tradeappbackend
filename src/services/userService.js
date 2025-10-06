@@ -55,7 +55,48 @@ export const createUser = async (params) => {
   const user = new UserModel({
     email: params.email,
     passwordHash: params.passwordHash,
+    credits: params.credits ?? 0,
+    isAdmin: params.isAdmin ?? false,
   });
   await user.save();
   return user;
 };
+
+export const findUserById = async (id) => UserModel.findById(id);
+
+export const unblockUser = async (user, reason) => {
+  await UserModel.updateOne(
+    { _id: user._id },
+    {
+      $set: {
+        blocked: false,
+        blockedReason: null,
+        blockedAt: null,
+      },
+    },
+  );
+  const updatedUser = await UserModel.findById(user._id);
+  await pushAudit(updatedUser, {
+    type: "ACCOUNT_UNBLOCKED",
+    detail: reason ?? "User unblocked by administrator",
+  });
+  return updatedUser;
+};
+
+export const updateUserCredits = async (user, credits, detailContext) => {
+  await UserModel.updateOne(
+    { _id: user._id },
+    {
+      $set: {
+        credits,
+      },
+    },
+  );
+  const updatedUser = await UserModel.findById(user._id);
+  await pushAudit(updatedUser, {
+    type: "CREDITS_UPDATED",
+    detail: detailContext ?? `Credits set to ${credits}`,
+  });
+  return updatedUser;
+};
+

@@ -8,6 +8,14 @@ export const errorHandler = (error, _req, res, _next) => {
     return;
   }
 
+  if (typeof error?.statusCode === "number") {
+    const payload = { error: error.message };
+    if (error.code) {
+      payload.code = error.code;
+    }
+    res.status(error.statusCode).json(payload);
+    return;
+  }
   if (error instanceof Error) {
     if (error.message === "INVALID_CREDENTIALS") {
       res.status(401).json({ error: "Invalid credentials" });

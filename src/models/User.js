@@ -16,6 +16,8 @@ const UserSchema = new Schema(
     blocked: { type: Boolean, default: false, index: true },
     blockedReason: { type: String },
     blockedAt: { type: Date },
+    credits: { type: Number, default: 0, min: 0 },
+    isAdmin: { type: Boolean, default: false, index: true },
     auditTrail: { type: [AuditEventSchema], default: [] },
   },
   { timestamps: true },
