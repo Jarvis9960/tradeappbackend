@@ -1,4 +1,4 @@
-import { addAuditEvent, markUserBlocked } from "./userService.js";
+import { addAuditEvent } from "./userService.js";
 import { SessionModel } from "../models/Session.js";
 import { generateToken } from "../utils/token.js";
 import { config } from "../config.js";
@@ -45,18 +45,38 @@ export const issueSession = async (
   deviceId,
   deviceLabel,
 ) => {
-  const existing = await findActiveSessionForUser(user);
-  if (existing) {
-    if (existing.deviceId !== deviceId) {
-      await revokeSession(existing, "Revoked after second device login attempt");
-      await markUserBlocked(user, "Blocked after second device login attempt");
-      throw new Error("SECOND_DEVICE");
-    }
+  const activeSessions = await SessionModel.find({
+    user: user._id,
+    revokedAt: { $exists: false },
+    expiresAt: { $gt: new Date() },
+  });
 
-    existing.expiresAt = computeExpiry();
-    await existing.save();
+  const sameDeviceSession = activeSessions.find((session) => session.deviceId === deviceId);
+
+  if (sameDeviceSession) {
+    const otherSessions = activeSessions.filter((session) => session.id !== sameDeviceSession.id);
+    sameDeviceSession.expiresAt = computeExpiry();
+    if (deviceLabel && sameDeviceSession.deviceLabel !== deviceLabel) {
+      sameDeviceSession.deviceLabel = deviceLabel;
+    }
+    await sameDeviceSession.save();
     await addAuditEvent(user, "AUTH_SUCCESS", "Session reused");
-    return { session: existing, reused: true };
+    if (otherSessions.length > 0) {
+      await Promise.all(
+        otherSessions.map((session) =>
+          revokeSession(session, "Revoked to enforce single active session"),
+        ),
+      );
+    }
+    return { session: sameDeviceSession, reused: true };
+  }
+
+  if (activeSessions.length > 0) {
+    await Promise.all(
+      activeSessions.map((session) =>
+        revokeSession(session, "Revoked before issuing new session"),
+      ),
+    );
   }
 
   const session = new SessionModel({
@@ -68,6 +88,10 @@ export const issueSession = async (
     expiresAt: computeExpiry(),
   });
   await session.save();
-  await addAuditEvent(user, "AUTH_SUCCESS", "Session issued");
-  return { session, reused: false };
+  await addAuditEvent(
+    user,
+    "AUTH_SUCCESS",
+    activeSessions.length > 0 ? "Session issued on new device" : "Session issued",
+  );
+  return { session, reused: false, rotated: activeSessions.length > 0 };
 };

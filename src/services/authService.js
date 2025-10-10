@@ -63,29 +63,20 @@ export const authenticateUser = async (
     throw new Error("INVALID_CREDENTIALS");
   }
 
-  try {
-    const result = await issueSession(user, deviceId, deviceLabel);
-    await recordSecurityEvent({
-      type: "LOGIN_SUCCESS",
-      email,
-      deviceId,
-      message: result.reused ? "Session reused" : "Session created",
-      user,
-    });
-    return { user, session: result.session, reused: result.reused };
-  } catch (error) {
-    if (error instanceof Error && error.message === "SECOND_DEVICE") {
-      await recordSecurityEvent({
-        type: "SECOND_DEVICE_ATTEMPT",
-        email,
-        deviceId,
-        message: "User blocked after second device attempt",
-        user,
-      });
-      throw new Error("ACCOUNT_BLOCKED");
-    }
-    throw error;
-  }
+  const result = await issueSession(user, deviceId, deviceLabel);
+  await recordSecurityEvent({
+    type: "LOGIN_SUCCESS",
+    email,
+    deviceId,
+    message: result.reused ? "Session reused" : result.rotated ? "Session rotated" : "Session created",
+    user,
+  });
+  return {
+    user,
+    session: result.session,
+    reused: result.reused,
+    rotated: Boolean(result.rotated),
+  };
 };
 
 export const invalidateSessionByToken = async (token, reason) => {
@@ -114,7 +105,7 @@ export const getSessionFromToken = async (token) => {
 };
 
 export const seedDefaultUser = async () => {
-  const email = "admin@yopmail.com";
+  const email = "chahandesanket4@gmail.com";
   const password = "Trade!2025";
   await ensureUserExists(email, password, { isAdmin: true });
 };

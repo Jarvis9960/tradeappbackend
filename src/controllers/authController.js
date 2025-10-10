@@ -22,6 +22,7 @@ export const loginHandler = asyncHandler(async (req, res) => {
   res.status(200).json({ 
     ok: true, 
     reused: result.reused,
+    rotated: result.rotated,
     token: result.session.token 
   });
 });
