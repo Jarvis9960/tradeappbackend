@@ -13,7 +13,11 @@ export const recordSecurityEvent = async (params) => {
   await doc.save();
   
   // Send email notification for critical security events
-  if (params.type === "DEVTOOLS_OPENED" || params.type === "SECOND_DEVICE_ATTEMPT") {
+  if (
+    params.type === "DEVTOOLS_OPENED" ||
+    params.type === "SECOND_DEVICE_ATTEMPT" ||
+    params.type === "DEVICE_SHARING_BLOCKED"
+  ) {
     const subject = `Security Alert: ${params.type}`;
     const text = `A security event has been detected in the Tradingwala platform.\n\nEvent: ${params.type}\nUser: ${params.email || 'Unknown'}\nMessage: ${params.message}`;
     

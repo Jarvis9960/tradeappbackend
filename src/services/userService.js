@@ -32,6 +32,62 @@ export const addAuditEvent = async (user, type, detail) => {
   await pushAudit(user, { type, detail });
 };
 
+export const upsertAllowedDevice = async (user, deviceId, deviceLabel, ipAddress) => {
+  const now = new Date();
+  const devices = user.devices ?? [];
+  const existing = devices.find((device) => device.deviceId === deviceId);
+
+  if (existing) {
+    const updateDoc = {
+      "devices.$.lastSeenAt": now,
+    };
+    if (deviceLabel && existing.deviceLabel !== deviceLabel) {
+      updateDoc["devices.$.deviceLabel"] = deviceLabel;
+    }
+    if (ipAddress) {
+      updateDoc["devices.$.lastIp"] = ipAddress;
+    }
+    await UserModel.updateOne(
+      { _id: user._id, "devices.deviceId": deviceId },
+      { $set: updateDoc },
+    );
+    return {
+      allowed: true,
+      isNew: false,
+      device: {
+        ...existing,
+        lastSeenAt: now,
+        deviceLabel: deviceLabel ?? existing.deviceLabel,
+        lastIp: ipAddress ?? existing.lastIp,
+      },
+    };
+  }
+
+  // If this is a brand new device and we already have at least one device recorded,
+  // treat it as sharing and flag for block.
+  const shouldFlagSharing = devices.length > 0;
+
+  const newDevice = {
+    deviceId,
+    deviceLabel,
+    firstSeenAt: now,
+    lastSeenAt: now,
+    lastIp: ipAddress,
+  };
+
+  await UserModel.updateOne(
+    { _id: user._id },
+    { $push: { devices: newDevice } },
+  );
+
+  return {
+    allowed: true,
+    isNew: true,
+    device: newDevice,
+    shouldFlagSharing,
+  };
+};
+
 export const markUserBlocked = async (user, reason) => {
   const blockedAt = new Date();
   await UserModel.updateOne(

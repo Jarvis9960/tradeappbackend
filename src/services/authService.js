@@ -1,5 +1,11 @@
 import bcrypt from "bcryptjs";
-import { findUserByEmail, addAuditEvent, createUser, markUserBlocked } from "./userService.js";
+import {
+  findUserByEmail,
+  addAuditEvent,
+  createUser,
+  markUserBlocked,
+  upsertAllowedDevice,
+} from "./userService.js";
 import {
   issueSession,
   findSessionByToken,
@@ -26,6 +32,7 @@ export const authenticateUser = async (
   password,
   deviceId,
   deviceLabel,
+  ipAddress,
 ) => {
   const user = await findUserByEmail(email);
   if (!user) {
@@ -61,6 +68,39 @@ export const authenticateUser = async (
       user,
     });
     throw new Error("INVALID_CREDENTIALS");
+  }
+
+  const deviceResult = await upsertAllowedDevice(user, deviceId, deviceLabel, ipAddress);
+  if (deviceResult.isNew && deviceResult.shouldFlagSharing) {
+    const blockedUser = await markUserBlocked(
+      user,
+      "Suspected account sharing: login from unrecognized device",
+    );
+    await revokeAllSessionsForUser(blockedUser, "Blocked for suspected sharing");
+    await addAuditEvent(
+      blockedUser,
+      "AUTH_FAILURE",
+      "Blocked for suspected sharing due to unrecognized device",
+    );
+    await recordSecurityEvent({
+      type: "DEVICE_SHARING_BLOCKED",
+      email,
+      deviceId,
+      message: "Blocked after login from unrecognized device",
+      user: blockedUser,
+      metadata: {
+        devicesSeen: (user.devices?.length ?? 0) + 1,
+      },
+    });
+    throw new Error("ACCOUNT_BLOCKED_SHARING");
+  }
+
+  if (deviceResult.isNew) {
+    await addAuditEvent(
+      user,
+      "DEVICE_REGISTERED",
+      `New device added (${deviceLabel || deviceId})`,
+    );
   }
 
   const result = await issueSession(user, deviceId, deviceLabel);

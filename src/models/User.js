@@ -18,6 +18,18 @@ const UserSchema = new Schema(
     blockedAt: { type: Date },
     credits: { type: Number, default: 0, min: 0 },
     isAdmin: { type: Boolean, default: false, index: true },
+    devices: {
+      type: [
+        {
+          deviceId: { type: String, required: true },
+          deviceLabel: { type: String },
+          firstSeenAt: { type: Date, default: () => new Date() },
+          lastSeenAt: { type: Date, default: () => new Date() },
+          lastIp: { type: String },
+        },
+      ],
+      default: [],
+    },
     auditTrail: { type: [AuditEventSchema], default: [] },
   },
   { timestamps: true },

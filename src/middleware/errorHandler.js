@@ -25,6 +25,10 @@ export const errorHandler = (error, _req, res, _next) => {
       res.status(423).json({ error: "Account blocked" });
       return;
     }
+    if (error.message === "ACCOUNT_BLOCKED_SHARING") {
+      res.status(423).json({ error: "Account blocked: sharing suspected" });
+      return;
+    }
   }
 
   res.status(500).json({ error: "Unexpected server error" });

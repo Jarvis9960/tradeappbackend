@@ -18,7 +18,13 @@ const loginSchema = z.object({
 export const loginHandler = asyncHandler(async (req, res) => {
   const payload = loginSchema.parse(req.body);
 
-  const result = await authenticateUser(payload.email, payload.password, payload.deviceId, payload.deviceLabel);
+  const result = await authenticateUser(
+    payload.email,
+    payload.password,
+    payload.deviceId,
+    payload.deviceLabel,
+    req.ip,
+  );
   res.status(200).json({ 
     ok: true, 
     reused: result.reused,
