@@ -71,7 +71,7 @@ export const authenticateUser = async (
   }
 
   const deviceResult = await upsertAllowedDevice(user, deviceId, deviceLabel, ipAddress);
-  if (deviceResult.isNew && deviceResult.shouldFlagSharing) {
+  if (deviceResult.isNew && deviceResult.shouldFlagSharing && !user.isAdmin) {
     const blockedUser = await markUserBlocked(
       user,
       "Suspected account sharing: login from unrecognized device",
