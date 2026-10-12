@@ -10,6 +10,11 @@ export const createApp = () => {
   const app = express();
 
   app.disable("x-powered-by");
+
+  // Required for req.ip to be the client address rather than the platform load balancer.
+  // Without this, every evidence record would show the same proxy IP and the network half of
+  // the proof would be worthless.
+  app.set("trust proxy", true);
   app.use(morgan(config.nodeEnv === "production" ? "combined" : "dev"));
   app.use(cors({
     origin: true, // Allow all origins for now, we'll validate in the handlers

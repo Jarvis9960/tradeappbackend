@@ -23,12 +23,21 @@ const extractBearerToken = (req) => {
 
 export const adminLoginHandler = asyncHandler(async (req, res) => {
   const payload = adminLoginSchema.parse(req.body);
-  const result = await authenticateUser(
-    payload.email,
-    payload.password,
-    payload.deviceId,
-    payload.deviceLabel,
-  );
+  const result = await authenticateUser({
+    email: payload.email,
+    password: payload.password,
+    deviceId: payload.deviceId,
+    deviceLabel: payload.deviceLabel,
+    ipAddress: req.ip,
+    headers: req.headers,
+  });
+
+  // Admins are exempt from device binding, so authenticateUser always returns a session for
+  // them. This guard is kept in case that exemption is ever narrowed.
+  if (result.requiresDeviceVerification) {
+    res.status(403).json({ error: "DEVICE_VERIFICATION_REQUIRED" });
+    return;
+  }
 
   if (!result.user.isAdmin) {
     await invalidateSessionByToken(result.session.token, "Admin login denied: user is not an admin");

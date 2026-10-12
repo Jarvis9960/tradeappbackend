@@ -6,6 +6,7 @@ const SecurityEventSchema = new Schema(
     email: { type: String, index: true },
     user: { type: Schema.Types.ObjectId, ref: "User", index: true },
     deviceId: { type: String },
+    deviceKey: { type: String, index: true },
     message: { type: String, required: true },
     metadata: { type: Schema.Types.Mixed },
     createdAt: { type: Date, default: () => new Date(), index: true },
